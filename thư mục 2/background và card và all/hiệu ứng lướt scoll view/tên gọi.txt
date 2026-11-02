@@ -1,0 +1,9 @@
+1.
+Hành động lướt (scroll) đóng vai trò như một "cần gạt" kích hoạt hiệu ứng mở màn/vén màn để lột tả nội dung tiếp theo
+
+tóm gọm nó là :
+Hiệu ứng cuộn mở màn nội dung (Scroll-Driven Gate Reveal) — nơi mỗi cú lướt chuột đóng vai trò là một cần gạt bẻ cong không gian để lột xác nội dung tiếp theo.
+
+
+
+2.

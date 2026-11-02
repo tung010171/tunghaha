@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizontal Blade Split - Minimal Scroll Gate Reveal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background-color: #050508;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            height: 300vh; /* Không gian cho hành vi scroll */
+            overflow-x: hidden;
+        }
+
+        /* Khung hiển thị cố định full viewport */
+        .viewport {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Khung lưới nền tối giản (Grid) */
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 1;
+        }
+
+        /* Vùng nội dung chung */
+        .section-layer {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* SECTION 1: Nội dung trang đầu */
+        #sec1 {
+            transition: transform 0.05s linear, opacity 0.05s linear, filter 0.05s linear;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 99px;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            background: rgba(0, 243, 255, 0.05);
+            color: #00f3ff;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        #sec1 h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1.1;
+            background: linear-gradient(180deg, #ffffff 0%, #8888a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            max-width: 900px;
+        }
+
+        #sec1 p {
+            color: #71717a;
+            font-size: 1.15rem;
+            max-width: 540px;
+            line-height: 1.6;
+        }
+
+        /* MÀN TRẬP 2 LƯỠI TÁCH NGANG (BLADE SPLIT PANELS) */
+        .blade {
+            position: absolute;
+            top: 0;
+            width: 50vw;
+            height: 100vh;
+            background: #08080d;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 3;
+            pointer-events: none;
+            transition: transform 0.05s linear;
+        }
+
+        #blade-left {
+            left: 0;
+            transform-origin: left center;
+            border-right: 1px solid rgba(0, 243, 255, 0.3);
+        }
+
+        #blade-right {
+            right: 0;
+            transform-origin: right center;
+            border-left: 1px solid rgba(0, 243, 255, 0.3);
+        }
+
+        /* SECTION 2: Nội dung trang tiếp theo nằm ở lớp đằng sau */
+        #sec2 {
+            z-index: 4;
+            opacity: 0;
+            transform: scale(0.9) translateZ(-100px);
+            transition: transform 0.05s linear, opacity 0.05s linear;
+        }
+
+        .card {
+            background: rgba(18, 18, 26, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 48px;
+            max-width: 620px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 243, 255, 0.08);
+            pointer-events: auto;
+        }
+
+        .card h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .card p {
+            color: #a1a1aa;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            margin-bottom: 28px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 28px;
+            border-radius: 10px;
+            background: #00f3ff;
+            color: #050508;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.2s;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #33f5ff;
+            transform: translateY(-2px);
+        }
+
+        /* Gợi ý cuộn */
+        .scroll-hint {
+            position: absolute;
+            bottom: 36px;
+            color: #52525b;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="viewport">
+        <!-- Lưới nền tối giản -->
+        <div class="bg-grid"></div>
+
+        <!-- Màn trập 2 lưỡi xé ngang (Blade Split) -->
+        <div class="blade" id="blade-left"></div>
+        <div class="blade" id="blade-right"></div>
+
+        <!-- Section 1 -->
+        <div class="section-layer" id="sec1">
+            <div class="badge">HORIZONTAL BLADE GATE</div>
+            <h1>TÁCH LƯỠI MÀN TRẬP CHIỀU NÔNG</h1>
+            <p>Cuộn chuột xuống dưới để trượt 2 cánh lưỡi màn trập sang hai bên trái/phải, giải phóng nội dung bí mật ở lớp hiển thị phía sau.</p>
+            <div class="scroll-hint">↓ CUỘN XUỐNG ĐỂ XÉ MÀN TRẬP ↓</div>
+        </div>
+
+        <!-- Section 2 (Trang nội dung được mở khóa) -->
+        <div class="section-layer" id="sec2">
+            <div class="card">
+                <h2>BỐ CỤC ĐÃ ĐƯỢC BẬT MỞ</h2>
+                <p>Cơ chế màn trập tách đôi (Blade Split) giúp chuyển đoạn nội dung dứt khoát, typography chuẩn mực, phản hồi từng pixel cuộn chuột mà không tốn tài nguyên GPU.</p>
+                <a href="#" class="btn">TIẾP TỤC KHÁM PHÁ</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sec1 = document.getElementById('sec1');
+        const sec2 = document.getElementById('sec2');
+        const bladeLeft = document.getElementById('blade-left');
+        const bladeRight = document.getElementById('blade-right');
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const maxScroll = window.innerHeight * 1.2;
+            let progress = Math.min(Math.max(scrollTop / maxScroll, 0), 1);
+
+            // Đẩy 2 lưỡi màn trập trượt sang 2 phía Trái (-100%) và Phải (+100%)
+            const moveX = progress * 100;
+            bladeLeft.style.transform = `translateX(-${moveX}%)`;
+            bladeRight.style.transform = `translateX(${moveX}%)`;
+
+            // Section 1 chìm dần và mờ đi
+            sec1.style.opacity = 1 - progress * 1.4;
+            sec1.style.transform = `scale(${1 - progress * 0.08})`;
+            sec1.style.filter = `blur(${progress * 10}px)`;
+
+            // Section 2 tiến ra từ khoảng sâu 3D phía sau (scale 0.9 -> 1.0)
+            if (progress > 0.15) {
+                const sec2Progress = (progress - 0.15) / 0.85;
+                sec2.style.opacity = sec2Progress;
+                sec2.style.transform = `scale(${0.9 + sec2Progress * 0.1})`;
+            } else {
+                sec2.style.opacity = 0;
+                sec2.style.transform = `scale(0.9)`;
+            }
+        });
+    </script>
+</body>
+</html>

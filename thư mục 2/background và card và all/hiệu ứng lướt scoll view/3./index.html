@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Dimensional Fold - Scroll Gate</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background-color: #040409;
+            color: #ffffff;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            height: 350vh; /* Khoảng không gian cuộn kích hoạt */
+            overflow-x: hidden;
+        }
+
+        /* Khung hiển thị cố định màn hình */
+        .viewport {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            perspective: 1500px;
+        }
+
+        /* Nền Canvas ảo giác dải ngân hà lượng tử */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* SECTION 1: Trang hiện tại (Cửa trên & Cửa dưới sẽ nén lật vào trong) */
+        .fold-panel {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 50vh;
+            background: linear-gradient(180deg, rgba(8, 8, 20, 0.98), rgba(15, 12, 35, 0.95));
+            border-bottom: 2px solid rgba(0, 243, 255, 0.4);
+            border-top: 2px solid rgba(0, 243, 255, 0.4);
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(25px);
+            box-shadow: inset 0 0 50px rgba(0, 243, 255, 0.15);
+            transform-style: preserve-3d;
+            transition: transform 0.05s linear, opacity 0.05s linear;
+        }
+
+        #panel-top {
+            top: 0;
+            transform-origin: top center;
+        }
+
+        #panel-bottom {
+            bottom: 0;
+            transform-origin: bottom center;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            letter-spacing: 6px;
+            font-weight: 900;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #00f3ff, #b000ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 35px rgba(0, 243, 255, 0.5);
+            text-align: center;
+        }
+
+        .hero-desc {
+            color: #8a99ad;
+            font-size: 1.1rem;
+            margin-top: 15px;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        /* LÕI NĂNG LƯỢNG (Ranh giới giữa 2 cánh cửa) */
+        .energy-beam {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #00f3ff, #b000ff, #00f3ff, transparent);
+            z-index: 4;
+            transform: translateY(-50%);
+            box-shadow: 0 0 30px #00f3ff, 0 0 60px #b000ff;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        /* SECTION 2: Nội dung ẩn nằm ở chiều không gian bên trong (Portal Unfold) */
+        #sec2 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            transform: translateZ(-600px) rotateX(25deg);
+            transition: transform 0.05s linear, opacity 0.05s linear;
+        }
+
+        .portal-card {
+            background: rgba(12, 10, 28, 0.7);
+            border: 1px solid rgba(176, 0, 255, 0.4);
+            border-radius: 24px;
+            padding: 50px;
+            max-width: 680px;
+            text-align: center;
+            backdrop-filter: blur(30px);
+            box-shadow: 0 0 80px rgba(176, 0, 255, 0.25), inset 0 0 30px rgba(0, 243, 255, 0.1);
+        }
+
+        .portal-card h2 {
+            font-size: 3rem;
+            color: #00f3ff;
+            margin-bottom: 20px;
+            letter-spacing: 4px;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
+        }
+
+        .portal-card p {
+            color: #d1d5db;
+            font-size: 1.2rem;
+            line-height: 1.8;
+        }
+
+        /* Gợi ý cuộn */
+        .scroll-hint {
+            position: absolute;
+            bottom: 25px;
+            color: #00f3ff;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.3; transform: translateY(0); }
+            100% { opacity: 1; transform: translateY(-6px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="viewport">
+        <!-- Background Canvas 3D dải ngân hà -->
+        <canvas id="particle-canvas"></canvas>
+
+        <!-- Chùm tia năng lượng ở khe giữa -->
+        <div class="energy-beam" id="beam"></div>
+
+        <!-- Section 1 (Nửa trên) -->
+        <div class="fold-panel" id="panel-top">
+            <h1 class="hero-title">GẬP NẾP KHÔNG GIANG</h1>
+            <p class="hero-desc">Lướt cuộn chuột để bẻ cong thực tại và tiến vào chiều không gian ẩn</p>
+        </div>
+
+        <!-- Section 1 (Nửa dưới) -->
+        <div class="fold-panel" id="panel-bottom">
+            <div class="scroll-hint">↓ CUỘN XUỐNG ĐỂ KÍCH HOẠT NỐT GẬP ↓</div>
+        </div>
+
+        <!-- Section 2 (Trang nội dung chưa đọc ở phía sau) -->
+        <div id="sec2">
+            <div class="portal-card">
+                <h2>CHIỀU KHÔNG GIAN BÍ MẬT</h2>
+                <p>Nội dung này hoàn toàn bị phong ấn sau nếp gập 3D. Hành động cuộn trang của bạn chính là chìa khóa mở nắp không gian để kéo trọn vẹn thực tại mới ra ngoài sáng.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Khởi tạo Canvas Hạt Lượng Tử (Quantum Dust Canvas)
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let particles = Array.from({ length: 120 }, () => ({
+            x: (Math.random() - 0.5) * width,
+            y: (Math.random() - 0.5) * height,
+            z: Math.random() * 1000,
+            size: Math.random() * 2 + 1
+        }));
+
+        let scrollProgress = 0;
+
+        function renderCanvas() {
+            ctx.fillStyle = 'rgba(4, 4, 9, 0.3)';
+            ctx.fillRect(0, 0, width, height);
+
+            const cx = width / 2;
+            const cy = height / 2;
+
+            particles.forEach(p => {
+                // Tăng tốc hạt theo độ cuộn trang
+                p.z -= 2 + scrollProgress * 25;
+                if (p.z <= 0) p.z = 1000;
+
+                const k = 400 / p.z;
+                const px = p.x * k + cx;
+                const py = p.y * k + cy;
+
+                if (px >= 0 && px <= width && py >= 0 && py <= height) {
+                    const alpha = (1 - p.z / 1000) * (0.3 + scrollProgress * 0.7);
+                    const size = p.size * k * (1 + scrollProgress * 2);
+
+                    ctx.beginPath();
+                    ctx.arc(px, py, Math.max(size, 0.5), 0, Math.PI * 2);
+                    ctx.fillStyle = scrollProgress > 0.5 ? `rgba(176, 0, 255, ${alpha})` : `rgba(0, 243, 255, ${alpha})`;
+                    ctx.fill();
+                }
+            });
+
+            requestAnimationFrame(renderCanvas);
+        }
+        renderCanvas();
+
+        // 2. Logic điều khiển cuộn trang (Scroll Gate Reveal Mechanism)
+        const panelTop = document.getElementById('panel-top');
+        const panelBottom = document.getElementById('panel-bottom');
+        const sec2 = document.getElementById('sec2');
+        const beam = document.getElementById('beam');
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const maxScroll = window.innerHeight * 1.5;
+            let progress = Math.min(Math.max(scrollTop / maxScroll, 0), 1);
+            
+            scrollProgress = progress;
+
+            // Xoay gập 2 cánh cửa ra phía sau (3D Fold Back)
+            const angle = progress * 90; // Gập tối đa 90 độ
+            panelTop.style.transform = `rotateX(${angle}deg)`;
+            panelBottom.style.transform = `rotateX(${-angle}deg)`;
+            
+            panelTop.style.opacity = 1 - progress * 0.8;
+            panelBottom.style.opacity = 1 - progress * 0.8;
+
+            // Làm mờ thanh tia năng lượng
+            beam.style.opacity = 1 - progress * 1.2;
+
+            // Tiến Section 2 từ độ sâu Z (-600px -> 0px) ra trước mặt
+            const translateZ = -600 + progress * 600;
+            const rotateX = 25 - progress * 25;
+            
+            sec2.style.opacity = progress;
+            sec2.style.transform = `translateZ(${translateZ}px) rotateX(${rotateX}deg)`;
+        });
+    </script>
+</body>
+</html>

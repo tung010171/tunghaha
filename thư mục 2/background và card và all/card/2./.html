@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Holographic Scanner - 60fps Fully Responsive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background-color: #030306;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            perspective: 1000px;
+        }
+
+        /* Lưới nền không gian */
+        .bg-grid {
+            position: absolute;
+            inset: -50px;
+            background-image: 
+                linear-gradient(to right, rgba(0, 243, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 243, 255, 0.04) 1px, transparent 1px);
+            background-size: clamp(30px, 5vw, 50px) clamp(30px, 5vw, 50px);
+            z-index: 1;
+            transform: rotateX(20deg) translateZ(-100px);
+            pointer-events: none;
+        }
+
+        /* Khung hiển thị Hologram responsive */
+        .holo-card {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 520px; /* Giới hạn tối đa trên PC */
+            padding: clamp(24px, 5vw, 48px); /* Co giãn padding theo thiết bị */
+            background: rgba(10, 10, 18, 0.85);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: clamp(16px, 3vw, 24px);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+            transform-style: preserve-3d;
+            animation: floatCard 6s ease-in-out infinite alternate;
+            will-change: transform;
+        }
+
+        /* Tia Laser quét tự động */
+        .scanner-beam {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(0, 243, 255, 0.05) 45%,
+                rgba(0, 243, 255, 0.4) 50%,
+                rgba(0, 243, 255, 0.05) 55%,
+                transparent 100%
+            );
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+            pointer-events: none;
+            animation: scanLoop 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            will-change: transform;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 99px;
+            border: 1px solid rgba(0, 243, 255, 0.4);
+            background: rgba(0, 243, 255, 0.08);
+            color: #00f3ff;
+            font-size: clamp(0.65rem, 2vw, 0.75rem);
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            margin-bottom: clamp(12px, 3vw, 20px);
+        }
+
+        h1 {
+            font-size: clamp(1.4rem, 4.5vw, 2.2rem); /* Tự chỉnh cỡ chữ mượt mà */
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: clamp(10px, 2vw, 14px);
+            background: linear-gradient(180deg, #ffffff 0%, #8888a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            word-wrap: break-word;
+        }
+
+        p {
+            color: #8e8ea0;
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+            line-height: 1.6;
+            margin-bottom: clamp(20px, 4vw, 28px);
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: clamp(12px, 3vw, 20px);
+            font-size: clamp(0.7rem, 2vw, 0.8rem);
+            color: #52525b;
+            font-weight: 600;
+            gap: 8px;
+            flex-wrap: wrap; /* Tránh tràn dòng trên màn hình siêu nhỏ */
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00f3ff;
+            box-shadow: 0 0 10px #00f3ff;
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Keyframes chuyển động mượt 60fps */
+        @keyframes scanLoop {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(200%); }
+        }
+
+        @keyframes floatCard {
+            0% { transform: rotateY(-5deg) rotateX(3deg) translateY(0); }
+            100% { transform: rotateY(5deg) rotateX(-3deg) translateY(-8px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Tối ưu riêng cho màn hình điện thoại nhỏ (Mobile Portrait) */
+        @media (max-width: 480px) {
+            @keyframes floatCard {
+                0% { transform: rotateY(-3deg) rotateX(2deg) translateY(0); }
+                100% { transform: rotateY(3deg) rotateX(-2deg) translateY(-4px); }
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-grid"></div>
+
+    <div class="holo-card">
+        <!-- Tia Laser quét tự động -->
+        <div class="scanner-beam"></div>
+
+        <div class="badge">AUTONOMOUS HOLO SCAN</div>
+        <h1>QUÉT HOLOGRAM TỰ ĐỘNG</h1>
+        <p>Giao diện tự động quét luồng sáng chùm Laser đa chiều liên tục ngay khi truy cập, không cần cuộn chuột hay tương tác click thủ công.</p>
+        
+        <div class="status-bar">
+            <div class="status-item"><span class="status-dot"></span>SYSTEM ONLINE</div>
+            <div class="status-item">60 FPS / GPU ACCELERATED</div>
+        </div>
+    </div>
+
+</body>
+</html>
